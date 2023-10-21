@@ -1,11 +1,19 @@
 from sqlalchemy import create_engine, MetaData
 from databases import Database
 
-DATABASE_URL = "postgresql+asyncpg://<username>:<password>@<host>:<port>/<dbname>"
+# These variables should be more secure, leaving them here for simplicity
+USERNAME = "unbabel_user"
+PASSWORD = "unbabel_password"
+HOST = "localhost"
+PORT = "5432"
+DB_NAME = "unbabel_db"
+
+DATABASE_URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{DB_NAME}"
 
 metadata = MetaData()
-database = Database(DATABASE_URL)
-engine = create_engine(DATABASE_URL.replace("+asyncpg", ""), echo=True)
 
-# Mock database for users
-users_db = {}
+# Asynchronous database connection for FastAPI routes
+database = Database(DATABASE_URL)
+
+# Synchronous database connection for operations like table creation
+engine = create_engine(DATABASE_URL.replace("+asyncpg", ""), echo=True)
