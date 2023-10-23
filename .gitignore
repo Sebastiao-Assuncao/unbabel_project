@@ -1,0 +1,13 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.__pycache__/
+
+# Virtual environment
+venv/
+
+# VSCode specific
+.vscode/
+
+# Docker
+*.env  # often contains secrets
+docker-compose.override.yml

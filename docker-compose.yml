@@ -1,0 +1,21 @@
+version: '3.7'
+
+services:
+  web:
+    build: .
+    command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:12
+    environment:
+      - POSTGRES_USER=unbabel_user
+      - POSTGRES_PASSWORD=unbabel_password
+      - POSTGRES_DB=unbabel_db
+    ports:
+      - "5433:5432"
