@@ -1,6 +1,6 @@
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import User, TranslationTaskIn, TranslationTaskOut, TranslationTask, BlacklistedToken
+from app.models import User, TranslationTaskIn, TranslationTaskOut, TranslationTask, BlacklistedToken, Rating, RatingIn, RatingOut
 from app.database import async_engine
 from app.utils import mock_translate
 
@@ -76,3 +76,29 @@ async def get_translation_task_by_id(task_id: int):
     async with AsyncSession(async_engine) as session:
         result = await session.execute(select(TranslationTask).filter_by(id=task_id))
         return result.scalar()
+    
+async def get_rating_by_task_id(translation_id: int):
+    async with AsyncSession(async_engine) as session:
+        result = await session.execute(select(Rating).filter_by(translation_id=translation_id))
+        return result.scalar()
+    
+async def create_translation_rating(rating: RatingIn, task_id: int):
+    async with AsyncSession(async_engine) as session:
+        new_rating = Rating(translation_id=task_id, rating=rating.rating, feedback=rating.feedback)
+
+        session.add(new_rating)
+        await session.commit()
+        await session.refresh(new_rating)
+
+        return RatingOut(
+            id=new_rating.id,
+            rating=new_rating.rating,
+            feedback=new_rating.feedback
+        )
+
+
+async def delete_rating(id: int):
+    async with AsyncSession(async_engine) as session:
+        rating_to_delete = session.execute(select(Rating).filter_by(id=id))
+        session.delete(rating_to_delete)
+        await session.commit()
