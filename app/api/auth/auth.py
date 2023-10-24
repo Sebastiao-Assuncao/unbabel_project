@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer
 from app.models import UserIn, Token
 from app.crud import create_user, get_user, blacklist_token
 import datetime
@@ -14,8 +14,12 @@ ALGORITHM = "HS256"
 
 access_token_jwt_subject = "access"
 
-# Instance of OAuth2PasswordBearer class to get token from header
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+# Instance of HTTPBearer to get token
+bearer = HTTPBearer()
+
+
+# TODO: Google-Translate library
+# TODO: Refresh tokens every 10 mins
 
 @auth_router.post("/register")
 async def register(user: UserIn):
@@ -52,20 +56,20 @@ async def login(user: UserIn):
     access_token = jwt.encode({"sub": user.username, "iat": current_time}, SECRET_KEY, algorithm=ALGORITHM)
     return {"access_token": access_token, "token_type": "bearer"}
 
-
 @auth_router.post("/logout")
-async def logout(token: str = Depends(oauth2_scheme)):
+async def logout(token: str = Depends(bearer)):
     # Blacklist the token
-    await blacklist_token(token)
-    return {"status": "success", "message": "Successfully logged out"}
+    token_str = token.credentials
+    await blacklist_token(token_str)
+    return {"status": "success", "message": "Successfully logged out with bearer"}
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(bearer)):
     """
     Decode the JWT token and return the current user
     """
     try:
         # Decode the token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid Credentials")

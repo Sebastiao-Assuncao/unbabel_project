@@ -46,11 +46,15 @@ async def rate_task(task_id: int, rating: RatingIn, current_user: User = Depends
     
     return await create_translation_rating(rating=rating, task_id=task_id)
 
+# @translation_router.get("tasks/{task_id}/rate")
+# async def get_rating(task_id: int, current_user: User = Depends(get_current_user)):
+#     return await get_rating_by_task_id(task_id)
+
 @translation_router.delete("/tasks/{task_id}/rate")
 async def delete_rating(task_id: int, current_user: User = Depends(get_current_user)):
     rating = await get_rating_by_task_id(task_id)
     
-    # TODO: This is happening even when there is a task
+    # TODO: This is happening even when there is a rating
     if not rating:
         raise HTTPException(status_code=404, detail="Rating not found")
     
