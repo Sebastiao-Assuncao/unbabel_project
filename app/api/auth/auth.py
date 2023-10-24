@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer
-from app.models import UserIn, Token
+from app.models import UserIn, UserOut, Token
 from app.crud import create_user, get_user, blacklist_token
-import datetime
+from datetime import datetime, timedelta
 import bcrypt
 import jwt
 
@@ -13,16 +13,27 @@ SECRET_KEY = "my_secret_key"
 ALGORITHM = "HS256"
 
 access_token_jwt_subject = "access"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Instance of HTTPBearer to get token
 bearer = HTTPBearer()
 
-
 # TODO: Google-Translate library
-# TODO: Refresh tokens every 10 mins
 
-@auth_router.post("/register")
+@auth_router.post("/register", response_model=UserOut)
 async def register(user: UserIn):
+    """
+    Registers a new user.
+
+    Args:
+        user (UserIn): The input data for the new user.
+
+    Returns:
+        UserOut: The registered user.
+
+    Raises:
+        HTTPException: If the username is already registered.
+    """
     # Check if user already exists
     existing_user = await get_user(user.username)
     if existing_user:
@@ -34,10 +45,22 @@ async def register(user: UserIn):
     # Store in db
     await create_user(user.username, hashed_password.decode('utf-8'))
 
-    return {"status": "success", "username": user.username}
+    return UserOut(username=user.username)
 
 @auth_router.post("/login", response_model=Token)
 async def login(user: UserIn):
+    """
+    Logs in a user and returns an access token.
+
+    Args:
+        user (UserIn): The input data for the user login.
+
+    Returns:
+        Token: The access token.
+
+    Raises:
+        HTTPException: If the username or password is incorrect.
+    """
     # Fetch user from the database
     db_user = await get_user(user.username)
 
@@ -49,23 +72,41 @@ async def login(user: UserIn):
     if not bcrypt.checkpw(user.password.encode('utf-8'), db_user.hashed_password.encode('utf-8')):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
-    # We add a unique timestamp to allow for multi-sessions after logging out (and blackmailing the token)
-    current_time = datetime.datetime.now()
+    # Expiration included for added security. Re-login required.
+    expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     # Generate JWT token
-    access_token = jwt.encode({"sub": user.username, "iat": current_time}, SECRET_KEY, algorithm=ALGORITHM)
-    return {"access_token": access_token, "token_type": "bearer"}
+    access_token = jwt.encode({"sub": user.username, "exp": expire }, SECRET_KEY, algorithm=ALGORITHM)
+    return Token(access_token=access_token, token_type="Bearer")
 
 @auth_router.post("/logout")
 async def logout(token: str = Depends(bearer)):
+    """
+    Logs out a user by blacklisting the token.
+
+    Args:
+        token (str): The access token.
+
+    Returns:
+        Dict[str, str]: A dictionary indicating the status and message of the logout.
+    """
     # Blacklist the token
     token_str = token.credentials
     await blacklist_token(token_str)
-    return {"status": "success", "message": "Successfully logged out with bearer"}
+    return {"status": "success", "message": "Successfully logged out."}
 
 async def get_current_user(token: str = Depends(bearer)):
     """
-    Decode the JWT token and return the current user
+    Retrieves the current authenticated user based on the provided token.
+
+    Args:
+        token (str): The access token.
+
+    Returns:
+        User: The current authenticated user.
+
+    Raises:
+        HTTPException: If the token is invalid or the user is not found.
     """
     try:
         # Decode the token
@@ -82,4 +123,4 @@ async def get_current_user(token: str = Depends(bearer)):
         return user
 
     except jwt.PyJWTError as e:
-        raise HTTPException(status_code=401, detail="Invalid credentials") from e
+        raise HTTPException(status_code=401, detail="Invalid credentials. Try logging in again") from e

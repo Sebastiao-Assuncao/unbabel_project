@@ -39,7 +39,7 @@ class Rating(Base):
         
         return rating
 
-    
+# Used to implement the logout function.
 class BlacklistedToken(Base):
     __tablename__ = 'blacklisted_tokens'
 
