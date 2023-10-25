@@ -1,7 +1,8 @@
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from app.crud import is_token_blacklisted
+
 
 class TokenBlacklistMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -17,3 +18,4 @@ class TokenBlacklistMiddleware(BaseHTTPMiddleware):
                 # raise HTTPException(status_code=401, detail="Token has been blacklisted")
 
         return await call_next(request)
+

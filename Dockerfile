@@ -10,14 +10,12 @@ COPY requirements.txt /app/
 # Set the working directory in docker
 WORKDIR /app
 
-# Install system dependencies required for psycopg2
+# Install system dependencies required for psycopg2 and requirements.txt dependencies
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     gcc \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir -r requirements.txt
 
 # Copy the content of the local src directory to the working directory
 COPY . /app/
