@@ -62,7 +62,7 @@ class UserOut(BaseModel):
     username: str
 
 class TranslationTaskIn(BaseModel):
-    source_language: str
+    source_language: Optional[str] = None
     target_language: str
     text_to_translate: str
 

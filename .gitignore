@@ -9,3 +9,6 @@ venv/
 
 # Environment variables
 .env
+
+# Cloud Translation API Credentials
+google_credentials.json

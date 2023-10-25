@@ -19,8 +19,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 # Instance of HTTPBearer to get token
 bearer = HTTPBearer()
 
-# TODO: Google-Translate library
-
 @auth_router.post("/register", response_model=UserOut)
 async def register(user: UserIn):
     """

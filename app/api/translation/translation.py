@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.models import TranslationTaskIn, TranslationTaskOut, User, RatingIn, RatingOut
 from app.crud import create_translation_task, get_translation_tasks, get_translation_task_by_id, create_translation_rating, get_rating_by_task_id, remove_rating
 from app.api.auth.auth import get_current_user
+from app.utils import mock_translate, translate_text
 from typing import List
 
 translation_router = APIRouter()
@@ -18,7 +19,15 @@ async def create_task(task: TranslationTaskIn, current_user: User = Depends(get_
     Returns:
         TranslationTaskOut: The created translation task.
     """
-    return await create_translation_task(current_user.id, task)
+    # Used to save on API Costs
+    #translated_text = mock_translate(task.text_to_translate, task.target_language)
+
+    # Uses Google Cloud Translation API for translation
+    source_language = task.source_language or None
+
+    (translated_text, source_language) = translate_text(source_language, task.target_language, task.text_to_translate)
+
+    return await create_translation_task(current_user.id, task, source_language, translated_text)
 
 @translation_router.get("/tasks", response_model=List[TranslationTaskOut])
 async def list_tasks(current_user: User = Depends(get_current_user)):

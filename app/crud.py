@@ -2,7 +2,6 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import User, TranslationTaskIn, TranslationTaskOut, TranslationTask, BlacklistedToken, Rating, RatingIn, RatingOut
 from app.database import async_engine
-from app.utils import mock_translate
 
 
 async def create_user(username: str, hashed_password: str):
@@ -83,7 +82,7 @@ async def is_token_blacklisted(token: str):
 
     
 # Create a new translation task
-async def create_translation_task(user_id: int, task: TranslationTaskIn):
+async def create_translation_task(user_id: int, task: TranslationTaskIn, source: str, translated_text: str):
     """
     Creates a translation task for a user.
 
@@ -96,8 +95,7 @@ async def create_translation_task(user_id: int, task: TranslationTaskIn):
 
     """
     async with AsyncSession(async_engine) as session:
-        translated_text = mock_translate(task.text_to_translate, task.target_language)
-        new_translation_task = TranslationTask(user_id=user_id, source_language=task.source_language,
+        new_translation_task = TranslationTask(user_id=user_id, source_language=source,
                                                target_language=task.target_language, text_to_translate=task.text_to_translate, translated_text=translated_text)
         session.add(new_translation_task)
         await session.commit()
