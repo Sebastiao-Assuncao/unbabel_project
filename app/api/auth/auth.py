@@ -5,12 +5,13 @@ from app.crud import create_user, get_user, blacklist_token
 from datetime import datetime, timedelta
 import bcrypt
 import jwt
+import os
 
 auth_router = APIRouter()
 
-# For simplicity, we leave SECRET_KEY and ALGORITHM here unsafe
-SECRET_KEY = "my_secret_key"
-ALGORITHM = "HS256"
+# Fetch environment variables
+SECRET_KEY = os.environ.get("SECRET_KEY")
+ALGORITHM = os.environ.get("ENCRYPT_ALGORITHM")
 
 access_token_jwt_subject = "access"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30

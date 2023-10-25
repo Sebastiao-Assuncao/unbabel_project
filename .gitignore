@@ -6,3 +6,6 @@ venv/
 
 # VSCode specific
 .vscode/
+
+# Environment variables
+.env
