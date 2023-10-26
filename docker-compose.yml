@@ -25,3 +25,8 @@ services:
       - POSTGRES_DB=unbabel_db
     ports:
       - "5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
